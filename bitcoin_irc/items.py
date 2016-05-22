@@ -16,7 +16,7 @@ class BitcoinIrcItem(scrapy.Item):
     username = scrapy.Field()
     text = scrapy.Field()
 
-class WaybackURL(scrapy.Item):
-    wayback_url = scrapy.Field()    
+class WaybackData(scrapy.Item):
     bitcoinirc_url = scrapy.Field()
+    archived_bitcoinirc_url = scrapy.Field()
     timestamp = scrapy.Field()
