@@ -50,7 +50,7 @@ class BitcoinstatsSpider(scrapy.Spider):
         day = int(url_params.group(4))
         for row in response.xpath("//tr"):
             elements = row.xpath("td")
-            time_string = elements[0].xpath("a/@href").extract()[0].replace("#l", ")"
+            time_string = elements[0].xpath("a/@href").extract()[0].replace("#l", ")")
             pytime = datetime.datetime.fromtimestamp(float(time_string))
             username = intern(elements[1].xpath("text()").extract()[0])
             extracted_text = elements[2].xpath(".//text()").extract()
