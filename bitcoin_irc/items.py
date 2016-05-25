@@ -23,7 +23,6 @@ class WaybackData(scrapy.Item):
 
 class WaybackArchive(scrapy.Item):
     archive_time = scrapy.Field()
-    page = scrapy.Field()
     time = scrapy.Field()
     chan = scrapy.Field()
     username = scrapy.Field()
