@@ -39,16 +39,14 @@ class WaybackData(scrapy.Spider):
         for row in response.xpath('//div[@class="container"]//tr'):
             elements = row.xpath("td")
             time_string = elements[0].xpath("a/@href").extract()[0].replace("#l", "")
-            pytime = datetime.datetime.fromtimestamp(float(time_string))
+            pytime = datetime.datetime.fromtimestamp(float(time_string),
+                                                     datetime.timezone.utc)
             try:
                 username = intern(elements[1].xpath("text()").extract()[0])
             except IndexError:
                 username = ""
             extracted_text = elements[2].xpath(".//text()").extract()
-            if len(extracted_text) > 0:
-                text = extracted_text[0]
-            else:
-                text = ""
+            text = "".join(extracted_text)
                 
             item = WaybackArchive()
             item["time"] = pytime
