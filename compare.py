@@ -2,16 +2,19 @@ from sys import intern
 from collections import defaultdict
 from pickle import load
 
+import editdistance
+
 import pdb
 
 
 class ChatLine:
     def __init__(self, time, username, text):
-        self.time = time
+        self.time = time.replace(microsecond = 0, second = 0, minute = 0)
         self.username = intern(username)
         self.text = text.strip()
 
     def __hash__(self):
+        # return hash((self.username, self.text))
         return hash((self.time, self.username, self.text))
 
     def __eq__(self, other):
@@ -35,8 +38,20 @@ class ArchivePage:
         sets = list(self._by_date.values())
         for set_a, set_b in zip(sets, sets[1:]):
             if set_a != set_b:
+                pdb.set_trace()
                 return False
         return True
+
+    def most_similar(self, chat_line):
+        closest = (None, None, float("inf"))
+        for archive_date, lines in self._by_date.items():
+            for line in lines:
+                distance = editdistance.eval(line.text, chat_line.text)
+                if distance < closest[2]:
+                    closest = (archive_date, line, distance)
+        return closest
+
+                    
     
     def all_contain(self, chat_line):
         for version in self._by_date.values():
@@ -45,7 +60,8 @@ class ArchivePage:
         return True
             
 print("Loading bitcoinstats website data.")
-with open("items_all.pickle", "rb") as pickle_file:
+# with open("bitcoinstats_all.pickle", "rb") as pickle_file:
+with open("bitcoinstats_email_all.pickle", "rb") as pickle_file:
     bitcoinirc_website = load(pickle_file)
 
 bitcoin_irc_lines = [ChatLine(item["time"], item["username"], item["text"])
@@ -65,18 +81,31 @@ for archive_item in wayback_archive:
         page_map[page] = ArchivePage(page)
     page_map[page].add_line(chat_line, archive_item["archive_time"])
 
-# print("checking self consistency.")
-# for page, archive in page_map.items():
-#     if not archive.self_consistent():
-#         print(page)
+print("checking self consistency.")
+self_const_count = 0
+for page, archive in page_map.items():
+    if not archive.self_consistent():
+        self_const_count += 1
+        print(page)
+
+print("There are {} pages that are not self-consistent.".format(self_const_count))
 
 print("Checking consistency with current website.")
 mismatch = []
+mismatch_dates = set()
 for chat_line in bitcoin_irc_lines:
     if chat_line.time.date() not in page_map:
         continue
+    if "email\xa0protected" in chat_line.text:
+        continue
     expected_page = page_map[chat_line.time.date()]
     if not expected_page.all_contain(chat_line):
-        mismatch.append(expected_page)
+        # print(expected_page.most_similar(chat_line))
+        # pdb.set_trace()
+        mismatch_dates.add(chat_line.time.date())
+        mismatch.append(chat_line.time.date())
+
+bitcoin_irc_lines_set = set(bitcoin_irc_lines)
 
 print(len(mismatch))
+pdb.set_trace()
